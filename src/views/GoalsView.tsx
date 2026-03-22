@@ -22,7 +22,7 @@ import { useHabits } from '../hooks/useHabits';
 import { GoalCard } from '../components/GoalCard';
 import { CreateGoalModal } from '../components/CreateGoalModal';
 import { GoalDetailModal } from '../components/GoalDetailModal';
-import { Spinner } from '../components/Spinner';
+import { GoalCardSkeleton } from '../components/Skeleton';
 import type { Goal, Pillar, Action, Habit } from '../lib/types';
 
 type StatusFilter = 'active' | 'paused' | 'archived' | 'complete' | 'all';
@@ -139,7 +139,13 @@ export default function GoalsView() {
   }
 
   if (goalsLoading || pillarsLoading) {
-    return <Spinner />;
+    return (
+      <div className="animate-slide-up">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => <GoalCardSkeleton key={i} />)}
+        </div>
+      </div>
+    );
   }
 
   return (

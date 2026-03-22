@@ -1,0 +1,84 @@
+import { useEffect } from 'react';
+import { useUIStore } from '../lib/store';
+
+export function useKeyboardShortcuts() {
+  const {
+    toggleLifeMap,
+    openCreateGoal,
+    openCreateAction,
+    openCreateHabit,
+    openJournalPrompt,
+    closeLifeMap,
+    closeJournalPrompt,
+    closeCreateGoal,
+    closeCreateAction,
+    closeCreateHabit,
+    isLifeMapOpen,
+    isJournalPromptOpen,
+    isCreateGoalOpen,
+    isCreateActionOpen,
+    isCreateHabitOpen,
+  } = useUIStore();
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const meta = e.metaKey || e.ctrlKey;
+
+      // Escape: close topmost overlay
+      if (e.key === 'Escape') {
+        if (isJournalPromptOpen) { closeJournalPrompt(); return; }
+        if (isCreateGoalOpen) { closeCreateGoal(); return; }
+        if (isCreateActionOpen) { closeCreateAction(); return; }
+        if (isCreateHabitOpen) { closeCreateHabit(); return; }
+        if (isLifeMapOpen) { closeLifeMap(); return; }
+        return;
+      }
+
+      // Don't trigger shortcuts when typing in inputs
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+      // Cmd+L: toggle Life Map
+      if (meta && e.key === 'l') {
+        e.preventDefault();
+        toggleLifeMap();
+        return;
+      }
+
+      // Cmd+K: create goal
+      if (meta && !e.shiftKey && e.key === 'k') {
+        e.preventDefault();
+        openCreateGoal();
+        return;
+      }
+
+      // Cmd+Shift+K: create action
+      if (meta && e.shiftKey && e.key === 'K') {
+        e.preventDefault();
+        openCreateAction();
+        return;
+      }
+
+      // Cmd+H: create habit
+      if (meta && e.key === 'h') {
+        e.preventDefault();
+        openCreateHabit();
+        return;
+      }
+
+      // Cmd+R: open journal prompt
+      if (meta && e.key === 'r') {
+        e.preventDefault();
+        openJournalPrompt();
+        return;
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    toggleLifeMap, openCreateGoal, openCreateAction, openCreateHabit, openJournalPrompt,
+    closeLifeMap, closeJournalPrompt, closeCreateGoal, closeCreateAction, closeCreateHabit,
+    isLifeMapOpen, isJournalPromptOpen, isCreateGoalOpen, isCreateActionOpen, isCreateHabitOpen,
+  ]);
+}

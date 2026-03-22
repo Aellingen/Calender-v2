@@ -319,7 +319,7 @@ export function LifeMapOverlay() {
 
       {/* Panel */}
       <div
-        className="fixed top-0 right-0 z-50 h-full flex flex-col"
+        className="fixed top-0 right-0 z-50 h-full flex flex-col life-map-panel"
         style={{
           width: 'min(70%, 720px)',
           background: 'var(--bg)',

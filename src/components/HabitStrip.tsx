@@ -45,11 +45,10 @@ export function HabitStrip() {
   return (
     <div className="relative mb-5">
       <div
-        className="flex items-start gap-4 px-4 py-3 rounded-[var(--r-lg)] overflow-x-auto"
+        className="flex items-start gap-4 px-4 py-3 rounded-[var(--r-lg)] overflow-x-auto no-scrollbar"
         style={{
           background: 'var(--bg-warm)',
           border: '1px solid var(--border)',
-          scrollbarWidth: 'none',
         }}
       >
         {sortedHabits.map((habit: Habit) => {

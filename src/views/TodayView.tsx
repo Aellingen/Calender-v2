@@ -8,7 +8,7 @@ import { useUIStore } from '../lib/store';
 import { ActionCard } from '../components/ActionCard';
 import { CreateActionModal } from '../components/CreateActionModal';
 import { HabitStrip } from '../components/HabitStrip';
-import { Spinner } from '../components/Spinner';
+import { ActionCardSkeleton, HabitCircleSkeleton } from '../components/Skeleton';
 import type { Goal, Pillar, Action } from '../lib/types';
 
 export default function TodayView() {
@@ -61,7 +61,14 @@ export default function TodayView() {
   }
 
   if (actionsLoading) {
-    return <Spinner />;
+    return (
+      <div className="animate-slide-up space-y-4">
+        <div className="flex gap-4 px-4 py-3">
+          {Array.from({ length: 5 }).map((_, i) => <HabitCircleSkeleton key={i} />)}
+        </div>
+        {Array.from({ length: 4 }).map((_, i) => <ActionCardSkeleton key={i} />)}
+      </div>
+    );
   }
 
   const now = new Date();

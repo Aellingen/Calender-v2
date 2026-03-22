@@ -218,6 +218,12 @@ export async function updateGoal(id: string, input: UpdateGoalInput): Promise<Go
 }
 
 export async function deleteGoal(id: string): Promise<void> {
+  // Unlink habits (they keep pillar, lose goal_id)
+  await supabase
+    .from('habits')
+    .update({ goal_id: null })
+    .eq('goal_id', id);
+
   const { error } = await supabase
     .from('goals')
     .delete()
