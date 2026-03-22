@@ -2,6 +2,8 @@ import { NavLink, Outlet } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth } from '../hooks/useAuth';
 import { CalendarSidebar } from './CalendarSidebar';
+import { LifeMapOverlay } from './LifeMapOverlay';
+import { useUIStore } from '../lib/store';
 import { useState } from 'react';
 
 function NavTab({ to, children }: { to: string; children: React.ReactNode }) {
@@ -30,6 +32,7 @@ function NavTab({ to, children }: { to: string; children: React.ReactNode }) {
 
 export function AppShell() {
   const { signOut, user } = useAuth();
+  const { toggleLifeMap } = useUIStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
 
@@ -62,6 +65,7 @@ export function AppShell() {
         {/* Right: Actions + User menu */}
         <div className="flex items-center gap-3 relative">
           <button
+            onClick={toggleLifeMap}
             className="text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer"
             style={{
               background: 'var(--accent-softer)',
@@ -108,6 +112,9 @@ export function AppShell() {
           )}
         </div>
       </header>
+
+      {/* Life Map overlay */}
+      <LifeMapOverlay />
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
