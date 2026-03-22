@@ -20,7 +20,6 @@ import { useGoals } from '../hooks/useGoals';
 import { useHabits } from '../hooks/useHabits';
 import { useActions } from '../hooks/useActions';
 import { useUIStore } from '../lib/store';
-import { PillarBadge } from './PillarBadge';
 import { ProgressRing } from './ProgressRing';
 import { GoalDetailModal } from './GoalDetailModal';
 import type { Pillar, Goal, Habit, Action } from '../lib/types';
@@ -400,7 +399,6 @@ export function LifeMapOverlay() {
           goal={selectedGoal}
           pillar={selectedPillar}
           actions={actionsByGoal.get(selectedGoal.id) ?? []}
-          habitCount={(habits ?? []).filter((h: Habit) => h.goal_id === selectedGoal.id).length}
           onClose={() => setSelectedGoalId(null)}
         />
       )}

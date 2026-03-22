@@ -284,7 +284,6 @@ export default function GoalsView() {
           goal={selectedGoal}
           pillar={selectedPillar}
           actions={actionsByGoal.get(selectedGoal.id) ?? []}
-          habitCount={habitCountByGoal.get(selectedGoal.id) ?? 0}
           onClose={() => setSelectedGoalId(null)}
         />
       )}

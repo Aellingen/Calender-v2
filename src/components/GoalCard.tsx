@@ -1,4 +1,5 @@
 import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities';
+import type { DraggableAttributes } from '@dnd-kit/core';
 import type { Goal, Pillar, Action } from '../lib/types';
 import { PillarBadge } from './PillarBadge';
 import { ProgressRing } from './ProgressRing';
@@ -11,7 +12,7 @@ interface GoalCardProps {
   habitCount: number;
   onClick: () => void;
   dragHandleListeners?: SyntheticListenerMap;
-  dragHandleAttributes?: Record<string, unknown>;
+  dragHandleAttributes?: DraggableAttributes;
 }
 
 export function GoalCard({

@@ -435,7 +435,7 @@ async function recalculateStreak(habitId: string): Promise<number> {
     .order('completed_date', { ascending: false });
   if (compError) throw compError;
 
-  const completionDates = new Set(completions.map((c: HabitCompletion) => c.completed_date));
+  const completionDates = new Set(completions.map((c: { completed_date: string }) => c.completed_date));
 
   // Walk backwards from today counting consecutive scheduled days with completions
   // Grace period: if current hour < 4 AM, consider "today" as yesterday

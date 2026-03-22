@@ -12,7 +12,6 @@ interface GoalDetailModalProps {
   goal: Goal;
   pillar: Pillar;
   actions: Action[];
-  habitCount: number;
   onClose: () => void;
 }
 
@@ -27,7 +26,6 @@ export function GoalDetailModal({
   goal,
   pillar,
   actions,
-  habitCount,
   onClose,
 }: GoalDetailModalProps) {
   const { data: pillars } = usePillars();
