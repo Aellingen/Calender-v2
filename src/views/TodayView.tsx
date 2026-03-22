@@ -5,6 +5,7 @@ import { useGoals } from '../hooks/useGoals';
 import { usePillars } from '../hooks/usePillars';
 import { ActionCard } from '../components/ActionCard';
 import { CreateActionModal } from '../components/CreateActionModal';
+import { HabitStrip } from '../components/HabitStrip';
 import { Spinner } from '../components/Spinner';
 import type { Goal, Pillar, Action } from '../lib/types';
 
@@ -76,15 +77,8 @@ export default function TodayView() {
         </div>
       </div>
 
-      {/* Habit strip placeholder (Sprint 5) */}
-      <div
-        className="mb-5 px-4 py-3 rounded-[var(--r-lg)]"
-        style={{ background: 'var(--bg-warm)', border: '1px dashed var(--border)' }}
-      >
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-          Habit strip will appear here
-        </p>
-      </div>
+      {/* Habit strip */}
+      <HabitStrip />
 
       {/* Action list */}
       {sortedActions.length > 0 ? (

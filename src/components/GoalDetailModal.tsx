@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { format } from 'date-fns';
 import type { Goal, Pillar, Action } from '../lib/types';
 import { useUpdateGoal, useDeleteGoal } from '../hooks/useGoals';
+import { useHabitsByGoal } from '../hooks/useHabits';
 import { usePillars } from '../hooks/usePillars';
 import { PillarBadge } from './PillarBadge';
 import { ProgressRing } from './ProgressRing';
+import { CreateHabitModal } from './CreateHabitModal';
 
 interface GoalDetailModalProps {
   goal: Goal;
@@ -29,10 +31,12 @@ export function GoalDetailModal({
   onClose,
 }: GoalDetailModalProps) {
   const { data: pillars } = usePillars();
+  const { data: linkedHabits } = useHabitsByGoal(goal.id);
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
 
   const [isEditing, setIsEditing] = useState(false);
+  const [showCreateHabit, setShowCreateHabit] = useState(false);
   const [name, setName] = useState(goal.name);
   const [description, setDescription] = useState(goal.description ?? '');
   const [status, setStatus] = useState(goal.status);
@@ -287,17 +291,56 @@ export function GoalDetailModal({
             )}
           </div>
 
-          {/* Habits section placeholder */}
-          {habitCount > 0 && (
-            <div>
-              <h3 className="text-xs font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>
-                Linked Habits
+          {/* Linked habits section */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                Linked Habits ({linkedHabits?.length ?? 0})
               </h3>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {habitCount} habit{habitCount > 1 ? 's' : ''} linked to this goal.
-              </p>
+              {!isEditing && (
+                <button
+                  type="button"
+                  onClick={() => setShowCreateHabit(true)}
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-[var(--r-sm)] cursor-pointer"
+                  style={{ color: 'var(--accent)', background: 'var(--accent-softer)' }}
+                >
+                  + Add habit
+                </button>
+              )}
             </div>
-          )}
+            {linkedHabits && linkedHabits.length > 0 ? (
+              <div className="space-y-1.5">
+                {linkedHabits.map((habit) => (
+                  <div
+                    key={habit.id}
+                    className="flex items-center gap-2 px-3 py-2 rounded-[var(--r-md)] text-sm"
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}
+                  >
+                    <span className="text-sm">{habit.icon || habit.name.charAt(0)}</span>
+                    <span style={{ color: 'var(--text)' }}>{habit.name}</span>
+                    {habit.current_streak > 0 && (
+                      <span
+                        className="ml-auto font-display text-xs"
+                        style={{
+                          color: habit.current_streak >= 30
+                            ? 'var(--success)'
+                            : habit.current_streak >= 7
+                              ? 'var(--warm)'
+                              : 'var(--text-muted)',
+                        }}
+                      >
+                        {habit.current_streak} day streak
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                No habits linked. Add a habit to build consistency.
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
@@ -370,6 +413,15 @@ export function GoalDetailModal({
           )}
         </div>
       </div>
+
+      {/* Create habit modal */}
+      {showCreateHabit && (
+        <CreateHabitModal
+          onClose={() => setShowCreateHabit(false)}
+          preselectedPillarId={goal.pillar_id}
+          preselectedGoalId={goal.id}
+        />
+      )}
     </div>
   );
 }

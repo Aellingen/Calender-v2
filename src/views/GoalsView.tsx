@@ -17,11 +17,13 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useGoals, useReorderGoals } from '../hooks/useGoals';
 import { usePillars } from '../hooks/usePillars';
+import { useActions } from '../hooks/useActions';
+import { useHabits } from '../hooks/useHabits';
 import { GoalCard } from '../components/GoalCard';
 import { CreateGoalModal } from '../components/CreateGoalModal';
 import { GoalDetailModal } from '../components/GoalDetailModal';
 import { Spinner } from '../components/Spinner';
-import type { Goal, Pillar, Action } from '../lib/types';
+import type { Goal, Pillar, Action, Habit } from '../lib/types';
 
 type StatusFilter = 'active' | 'paused' | 'archived' | 'complete' | 'all';
 
@@ -68,6 +70,8 @@ function SortableGoalCard({ goal, pillar, actions, habitCount, onClick }: Sortab
 export default function GoalsView() {
   const { data: goals, isLoading: goalsLoading } = useGoals();
   const { data: pillars, isLoading: pillarsLoading } = usePillars();
+  const { data: allActions } = useActions();
+  const { data: allHabits } = useHabits();
   const reorderGoals = useReorderGoals();
 
   const [pillarFilter, setPillarFilter] = useState<string | null>(null);
@@ -85,6 +89,26 @@ export default function GoalsView() {
     pillars?.forEach((p: Pillar) => map.set(p.id, p));
     return map;
   }, [pillars]);
+
+  const actionsByGoal = useMemo(() => {
+    const map = new Map<string, Action[]>();
+    allActions?.forEach((a: Action) => {
+      const list = map.get(a.goal_id) ?? [];
+      list.push(a);
+      map.set(a.goal_id, list);
+    });
+    return map;
+  }, [allActions]);
+
+  const habitCountByGoal = useMemo(() => {
+    const map = new Map<string, number>();
+    allHabits?.forEach((h: Habit) => {
+      if (h.goal_id) {
+        map.set(h.goal_id, (map.get(h.goal_id) ?? 0) + 1);
+      }
+    });
+    return map;
+  }, [allHabits]);
 
   const filteredGoals = useMemo(() => {
     if (!goals) return [];
@@ -212,8 +236,8 @@ export default function GoalsView() {
                     key={goal.id}
                     goal={goal}
                     pillar={pillar}
-                    actions={[]}
-                    habitCount={0}
+                    actions={actionsByGoal.get(goal.id) ?? []}
+                    habitCount={habitCountByGoal.get(goal.id) ?? 0}
                     onClick={() => setSelectedGoalId(goal.id)}
                   />
                 );
@@ -253,8 +277,8 @@ export default function GoalsView() {
         <GoalDetailModal
           goal={selectedGoal}
           pillar={selectedPillar}
-          actions={[]}
-          habitCount={0}
+          actions={actionsByGoal.get(selectedGoal.id) ?? []}
+          habitCount={habitCountByGoal.get(selectedGoal.id) ?? 0}
           onClose={() => setSelectedGoalId(null)}
         />
       )}
