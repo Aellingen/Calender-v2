@@ -7,6 +7,8 @@ import LoginView from './views/LoginView';
 import OnboardingView from './views/OnboardingView';
 import TodayView from './views/TodayView';
 import GoalsView from './views/GoalsView';
+import SettingsView from './views/SettingsView';
+import { JournalPrompt } from './components/JournalPrompt';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,11 +31,13 @@ function App() {
               <Route element={<AppShell />}>
                 <Route path="/today" element={<TodayView />} />
                 <Route path="/goals" element={<GoalsView />} />
+                <Route path="/settings" element={<SettingsView />} />
               </Route>
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/today" replace />} />
         </Routes>
+        <JournalPrompt />
       </BrowserRouter>
     </QueryClientProvider>
   );

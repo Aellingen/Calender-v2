@@ -3,6 +3,8 @@ import { format } from 'date-fns';
 import { useTodayActions, useCompleteAction, useUncompleteAction } from '../hooks/useActions';
 import { useGoals } from '../hooks/useGoals';
 import { usePillars } from '../hooks/usePillars';
+import { useTodayJournal } from '../hooks/useJournal';
+import { useUIStore } from '../lib/store';
 import { ActionCard } from '../components/ActionCard';
 import { CreateActionModal } from '../components/CreateActionModal';
 import { HabitStrip } from '../components/HabitStrip';
@@ -14,8 +16,10 @@ export default function TodayView() {
   const { data: actions, isLoading: actionsLoading } = useTodayActions(today);
   const { data: goals } = useGoals();
   const { data: pillars } = usePillars();
+  const { data: todayJournal } = useTodayJournal();
   const completeAction = useCompleteAction();
   const uncompleteAction = useUncompleteAction();
+  const { openJournalPrompt } = useUIStore();
 
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -121,6 +125,7 @@ export default function TodayView() {
         <div className="mt-6 text-center">
           <button
             type="button"
+            onClick={openJournalPrompt}
             className="px-5 py-2.5 text-sm font-semibold rounded-[var(--r-lg)] cursor-pointer"
             style={{
               background: 'var(--accent-softer)',
@@ -128,7 +133,7 @@ export default function TodayView() {
               border: '1px solid var(--accent-light)',
             }}
           >
-            Reflect on your day
+            {todayJournal ? 'Edit reflection' : 'Reflect on your day'}
           </button>
         </div>
       )}

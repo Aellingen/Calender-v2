@@ -3,8 +3,10 @@ import { format } from 'date-fns';
 import { useAuth } from '../hooks/useAuth';
 import { CalendarSidebar } from './CalendarSidebar';
 import { LifeMapOverlay } from './LifeMapOverlay';
+import { ReviewPanel } from './ReviewPanel';
 import { useUIStore } from '../lib/store';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function NavTab({ to, children }: { to: string; children: React.ReactNode }) {
   return (
@@ -33,8 +35,10 @@ function NavTab({ to, children }: { to: string; children: React.ReactNode }) {
 export function AppShell() {
   const { signOut, user } = useAuth();
   const { toggleLifeMap } = useUIStore();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [showReview, setShowReview] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
@@ -76,6 +80,18 @@ export function AppShell() {
           </button>
 
           <button
+            onClick={() => setShowReview(true)}
+            className="text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+            style={{
+              background: 'var(--bg)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border)',
+            }}
+          >
+            Review
+          </button>
+
+          <button
             onClick={() => setMenuOpen(!menuOpen)}
             className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold cursor-pointer"
             style={{
@@ -102,6 +118,13 @@ export function AppShell() {
                 {user?.email}
               </div>
               <button
+                onClick={() => { setMenuOpen(false); navigate('/settings'); }}
+                className="w-full text-left px-3 py-2 text-sm cursor-pointer hover:opacity-80"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Settings
+              </button>
+              <button
                 onClick={() => { setMenuOpen(false); signOut(); }}
                 className="w-full text-left px-3 py-2 text-sm cursor-pointer hover:opacity-80"
                 style={{ color: 'var(--danger)' }}
@@ -115,6 +138,9 @@ export function AppShell() {
 
       {/* Life Map overlay */}
       <LifeMapOverlay />
+
+      {/* Review panel */}
+      {showReview && <ReviewPanel onClose={() => setShowReview(false)} />}
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
