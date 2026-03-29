@@ -62,17 +62,18 @@ export function CreateGoalModal({ onClose, preselectedPillarId }: CreateGoalModa
     >
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-lg rounded-[var(--r-2xl)] animate-modal-in overflow-hidden"
+        className="w-full max-w-lg rounded-[var(--r-2xl)] animate-modal-in overflow-hidden flex flex-col"
         style={{
           background: 'var(--card)',
           border: '1px solid var(--border)',
           boxShadow: 'var(--shadow-lg)',
+          maxHeight: 'calc(100vh - 3.5rem - 2rem)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
-          className="flex items-center justify-between px-6 py-4"
+          className="flex items-center justify-between px-6 py-4 shrink-0"
           style={{ borderBottom: '1px solid var(--border)' }}
         >
           <h2 className="font-display text-lg" style={{ color: 'var(--text)' }}>
@@ -89,7 +90,7 @@ export function CreateGoalModal({ onClose, preselectedPillarId }: CreateGoalModa
         </div>
 
         {/* Body */}
-        <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+        <div className="px-6 py-5 space-y-4 overflow-y-auto flex-1 min-h-0">
           {/* Name */}
           <div>
             <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--text-secondary)' }}>
@@ -276,7 +277,7 @@ export function CreateGoalModal({ onClose, preselectedPillarId }: CreateGoalModa
 
         {/* Footer */}
         <div
-          className="flex items-center justify-between px-6 py-4"
+          className="flex items-center justify-between px-6 py-4 shrink-0"
           style={{ borderTop: '1px solid var(--border)' }}
         >
           <button
