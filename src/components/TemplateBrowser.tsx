@@ -36,7 +36,7 @@ export function TemplateBrowser({ onClose }: TemplateBrowserProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(28,25,23,0.4)' }}
+      style={{ top: '3.5rem', background: 'rgba(28,25,23,0.15)' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
