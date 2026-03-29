@@ -11,6 +11,7 @@ import {
 } from '../lib/api';
 import type { CreateActionInput, UpdateActionInput } from '../lib/api';
 import type { Action } from '../lib/types';
+import { toast } from '../components/Toast';
 
 const ACTIONS_KEY = ['actions'] as const;
 const TODAY_ACTIONS_KEY = ['actions', 'today'] as const;
@@ -45,6 +46,9 @@ export function useCreateAction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACTIONS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to create action', 'error');
+    },
   });
 }
 
@@ -56,6 +60,9 @@ export function useUpdateAction() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACTIONS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to update action', 'error');
+    },
   });
 }
 
@@ -65,20 +72,22 @@ export function useCompleteAction() {
     mutationFn: (id: string) => completeAction(id),
     onMutate: async (id) => {
       await queryClient.cancelQueries({ queryKey: ACTIONS_KEY });
-      const previousToday = queryClient.getQueryData<Action[]>(TODAY_ACTIONS_KEY);
+      const previous = queryClient.getQueriesData<Action[]>({ queryKey: ACTIONS_KEY });
 
-      // Optimistic update
       queryClient.setQueriesData<Action[]>(
         { queryKey: ACTIONS_KEY },
         (old) => old?.map((a) => (a.id === id ? { ...a, status: 'complete' as const } : a)),
       );
 
-      return { previousToday };
+      return { previous };
     },
     onError: (_err, _id, context) => {
-      if (context?.previousToday) {
-        queryClient.setQueryData(TODAY_ACTIONS_KEY, context.previousToday);
+      if (context?.previous) {
+        for (const [key, data] of context.previous) {
+          queryClient.setQueryData(key, data);
+        }
       }
+      toast('Failed to complete action', 'error');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ACTIONS_KEY });
@@ -93,10 +102,22 @@ export function useUncompleteAction() {
       updateAction(id, { status: 'active' }),
     onMutate: async ({ id }) => {
       await queryClient.cancelQueries({ queryKey: ACTIONS_KEY });
+      const previous = queryClient.getQueriesData<Action[]>({ queryKey: ACTIONS_KEY });
+
       queryClient.setQueriesData<Action[]>(
         { queryKey: ACTIONS_KEY },
         (old) => old?.map((a) => (a.id === id ? { ...a, status: 'active' as const } : a)),
       );
+
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        for (const [key, data] of context.previous) {
+          queryClient.setQueryData(key, data);
+        }
+      }
+      toast('Failed to uncomplete action', 'error');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ACTIONS_KEY });
@@ -110,6 +131,9 @@ export function useDeleteAction() {
     mutationFn: (id: string) => deleteAction(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACTIONS_KEY });
+    },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to delete action', 'error');
     },
   });
 }

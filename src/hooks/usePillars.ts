@@ -9,6 +9,7 @@ import {
 } from '../lib/api';
 import type { CreatePillarInput, UpdatePillarInput } from '../lib/api';
 import type { Pillar } from '../lib/types';
+import { toast } from '../components/Toast';
 
 const PILLARS_KEY = ['pillars'] as const;
 
@@ -36,6 +37,9 @@ export function useCreatePillar() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PILLARS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to create pillar', 'error');
+    },
   });
 }
 
@@ -45,6 +49,9 @@ export function useCreatePillars() {
     mutationFn: (data: CreatePillarInput[]) => createPillars(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PILLARS_KEY });
+    },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to create pillars', 'error');
     },
   });
 }
@@ -57,6 +64,9 @@ export function useUpdatePillar() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PILLARS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to update pillar', 'error');
+    },
   });
 }
 
@@ -67,6 +77,9 @@ export function useReorderPillars() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PILLARS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to reorder pillars', 'error');
+    },
   });
 }
 
@@ -76,6 +89,9 @@ export function useArchivePillar() {
     mutationFn: (id: string) => archivePillar(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PILLARS_KEY });
+    },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to archive pillar', 'error');
     },
   });
 }

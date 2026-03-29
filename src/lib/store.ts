@@ -24,6 +24,19 @@ interface UIState {
   isCreateHabitOpen: boolean;
   openCreateHabit: () => void;
   closeCreateHabit: () => void;
+
+  // Template browser
+  isTemplateBrowserOpen: boolean;
+  openTemplateBrowser: () => void;
+  closeTemplateBrowser: () => void;
+
+  // AI Chat panel
+  isAIChatOpen: boolean;
+  openAIChat: () => void;
+  closeAIChat: () => void;
+  toggleAIChat: () => void;
+  aiChatContext: { type?: string; id?: string; initialMessage?: string } | null;
+  openAIChatWithContext: (context: { type?: string; id?: string; initialMessage?: string }) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -47,4 +60,15 @@ export const useUIStore = create<UIState>((set) => ({
   isCreateHabitOpen: false,
   openCreateHabit: () => set({ isCreateHabitOpen: true }),
   closeCreateHabit: () => set({ isCreateHabitOpen: false }),
+
+  isTemplateBrowserOpen: false,
+  openTemplateBrowser: () => set({ isTemplateBrowserOpen: true }),
+  closeTemplateBrowser: () => set({ isTemplateBrowserOpen: false }),
+
+  isAIChatOpen: false,
+  openAIChat: () => set({ isAIChatOpen: true }),
+  closeAIChat: () => set({ isAIChatOpen: false, aiChatContext: null }),
+  toggleAIChat: () => set((s) => ({ isAIChatOpen: !s.isAIChatOpen })),
+  aiChatContext: null,
+  openAIChatWithContext: (context) => set({ isAIChatOpen: true, aiChatContext: context }),
 }));

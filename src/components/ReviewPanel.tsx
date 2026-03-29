@@ -5,7 +5,10 @@ import { usePillars } from '../hooks/usePillars';
 import { useGoals } from '../hooks/useGoals';
 import { useActions } from '../hooks/useActions';
 import { useHabits } from '../hooks/useHabits';
+import { generateReviewSummary } from '../lib/api';
+import { toast } from './Toast';
 import type { Pillar, Goal, Action, Habit, Review } from '../lib/types';
+import type { ReviewSummaryResult } from '../lib/api';
 
 interface ReviewPanelProps {
   onClose: () => void;
@@ -21,6 +24,8 @@ export function ReviewPanel({ onClose }: ReviewPanelProps) {
 
   const [note, setNote] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [aiSummary, setAiSummary] = useState<ReviewSummaryResult | null>(null);
+  const [isGeneratingSummary, setIsGeneratingSummary] = useState(false);
 
   // Compute per-pillar stats for this week
   const now = new Date();
@@ -70,14 +75,36 @@ export function ReviewPanel({ onClose }: ReviewPanelProps) {
       };
     });
 
-    await submitReview.mutateAsync({
-      review_type: 'weekly',
-      period_start: weekStartStr,
-      period_end: weekEndStr,
-      note: note.trim() || null,
-      pillar_breakdown: breakdown,
-    });
-    setNote('');
+    try {
+      const review = await submitReview.mutateAsync({
+        review_type: 'weekly',
+        period_start: weekStartStr,
+        period_end: weekEndStr,
+        note: note.trim() || null,
+        pillar_breakdown: breakdown,
+      });
+
+      // Generate AI summary after sealing
+      setIsGeneratingSummary(true);
+      try {
+        const summary = await generateReviewSummary({
+          review_id: review.id,
+          period_start: weekStartStr,
+          period_end: weekEndStr,
+          pillar_breakdown: breakdown,
+          note: note.trim() || undefined,
+        });
+        setAiSummary(summary);
+      } catch (error) {
+        toast(error instanceof Error ? error.message : 'Could not generate AI summary', 'error');
+      } finally {
+        setIsGeneratingSummary(false);
+      }
+
+      setNote('');
+    } catch (error) {
+      toast(error instanceof Error ? error.message : 'Failed to save review', 'error');
+    }
   }
 
   return (
@@ -111,7 +138,7 @@ export function ReviewPanel({ onClose }: ReviewPanelProps) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setShowHistory(!showHistory)}
+              onClick={() => { setShowHistory(!showHistory); setAiSummary(null); }}
               className="px-3 py-1.5 text-xs font-semibold rounded-[var(--r-full)] cursor-pointer"
               style={{
                 background: showHistory ? 'var(--accent-softer)' : 'var(--bg)',
@@ -153,9 +180,22 @@ export function ReviewPanel({ onClose }: ReviewPanelProps) {
                       </span>
                     </div>
                     {review.note && (
-                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      <p className="text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>
                         {review.note}
                       </p>
+                    )}
+                    {review.ai_summary && (
+                      <div
+                        className="mt-2 px-3 py-2 rounded-[var(--r-md)] text-xs"
+                        style={{ background: 'var(--accent-softer)', border: '1px solid var(--accent-light)' }}
+                      >
+                        <span className="font-semibold" style={{ color: 'var(--accent-text)' }}>
+                          ✨ AI Summary
+                        </span>
+                        <p className="mt-1 whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
+                          {review.ai_summary}
+                        </p>
+                      </div>
                     )}
                   </div>
                 ))
@@ -164,6 +204,69 @@ export function ReviewPanel({ onClose }: ReviewPanelProps) {
                   No reviews yet.
                 </p>
               )}
+            </div>
+          ) : aiSummary ? (
+            // AI Summary view (shown after sealing)
+            <div className="space-y-4 animate-slide-up">
+              <div
+                className="px-4 py-4 rounded-[var(--r-lg)]"
+                style={{ background: 'var(--accent-softer)', border: '1px solid var(--accent-light)' }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-base">✨</span>
+                  <span className="font-display text-sm" style={{ color: 'var(--accent-text)' }}>
+                    AI Review Summary
+                  </span>
+                </div>
+                <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
+                  {aiSummary.summary}
+                </p>
+              </div>
+
+              {aiSummary.highlights.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--success)' }}>
+                    Highlights
+                  </h3>
+                  <ul className="space-y-1">
+                    {aiSummary.highlights.map((h, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        <span style={{ color: 'var(--success)' }}>✓</span>
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {aiSummary.suggestions.length > 0 && (
+                <div>
+                  <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--accent)' }}>
+                    Suggestions
+                  </h3>
+                  <ul className="space-y-1">
+                    {aiSummary.suggestions.map((s, i) => (
+                      <li key={i} className="flex items-start gap-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                        <span style={{ color: 'var(--accent)' }}>→</span>
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full py-2.5 text-sm font-semibold rounded-[var(--r-md)] cursor-pointer"
+                style={{
+                  background: 'var(--accent)',
+                  color: 'white',
+                  boxShadow: 'var(--shadow-accent)',
+                }}
+              >
+                Done
+              </button>
             </div>
           ) : (
             // Current week breakdown
@@ -233,15 +336,15 @@ export function ReviewPanel({ onClose }: ReviewPanelProps) {
               <button
                 type="button"
                 onClick={handleSubmitReview}
-                disabled={submitReview.isPending}
+                disabled={submitReview.isPending || isGeneratingSummary}
                 className="w-full py-2.5 text-sm font-semibold text-white rounded-[var(--r-md)] cursor-pointer"
                 style={{
                   background: 'var(--accent)',
                   boxShadow: 'var(--shadow-accent)',
-                  opacity: submitReview.isPending ? 0.6 : 1,
+                  opacity: (submitReview.isPending || isGeneratingSummary) ? 0.6 : 1,
                 }}
               >
-                {submitReview.isPending ? 'Saving...' : 'Save Weekly Review'}
+                {isGeneratingSummary ? '✨ Generating AI summary...' : submitReview.isPending ? 'Saving...' : 'Save & Get AI Summary'}
               </button>
             </div>
           )}

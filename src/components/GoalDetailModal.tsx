@@ -4,6 +4,7 @@ import type { Goal, Pillar, Action } from '../lib/types';
 import { useUpdateGoal, useDeleteGoal } from '../hooks/useGoals';
 import { useHabitsByGoal } from '../hooks/useHabits';
 import { usePillars } from '../hooks/usePillars';
+import { useUIStore } from '../lib/store';
 import { PillarBadge } from './PillarBadge';
 import { ProgressRing } from './ProgressRing';
 import { CreateHabitModal } from './CreateHabitModal';
@@ -32,6 +33,7 @@ export function GoalDetailModal({
   const { data: linkedHabits } = useHabitsByGoal(goal.id);
   const updateGoal = useUpdateGoal();
   const deleteGoal = useDeleteGoal();
+  const { openAIChatWithContext } = useUIStore();
 
   const [isEditing, setIsEditing] = useState(false);
   const [showCreateHabit, setShowCreateHabit] = useState(false);
@@ -46,22 +48,30 @@ export function GoalDetailModal({
   const progress = total > 0 ? done / total : 0;
 
   async function handleSave() {
-    await updateGoal.mutateAsync({
-      id: goal.id,
-      data: {
-        name: name.trim(),
-        description: description.trim() || null,
-        status,
-        pillar_id: editPillarId,
-        deadline: deadline || null,
-      },
-    });
-    setIsEditing(false);
+    try {
+      await updateGoal.mutateAsync({
+        id: goal.id,
+        data: {
+          name: name.trim(),
+          description: description.trim() || null,
+          status,
+          pillar_id: editPillarId,
+          deadline: deadline || null,
+        },
+      });
+      setIsEditing(false);
+    } catch {
+      // Error toast handled by hook onError
+    }
   }
 
   async function handleDelete() {
-    await deleteGoal.mutateAsync(goal.id);
-    onClose();
+    try {
+      await deleteGoal.mutateAsync(goal.id);
+      onClose();
+    } catch {
+      // Error toast handled by hook onError
+    }
   }
 
   return (
@@ -387,18 +397,39 @@ export function GoalDetailModal({
             </>
           ) : (
             <>
-              <button
-                type="button"
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 text-sm font-semibold rounded-[var(--r-md)] cursor-pointer"
-                style={{
-                  color: 'var(--accent)',
-                  background: 'var(--accent-softer)',
-                  border: '1px solid var(--accent-light)',
-                }}
-              >
-                Edit
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    openAIChatWithContext({
+                      type: 'goal',
+                      id: goal.id,
+                      initialMessage: `Help me break down my goal "${goal.name}" into actionable steps`,
+                    });
+                    onClose();
+                  }}
+                  className="px-3 py-2 text-sm font-semibold rounded-[var(--r-md)] cursor-pointer"
+                  style={{
+                    color: 'var(--accent)',
+                    background: 'var(--accent-softer)',
+                    border: '1px solid var(--accent-light)',
+                  }}
+                >
+                  ✨ Ask AI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 text-sm font-semibold rounded-[var(--r-md)] cursor-pointer"
+                  style={{
+                    color: 'var(--accent)',
+                    background: 'var(--accent-softer)',
+                    border: '1px solid var(--accent-light)',
+                  }}
+                >
+                  Edit
+                </button>
+              </div>
               <button
                 type="button"
                 onClick={onClose}

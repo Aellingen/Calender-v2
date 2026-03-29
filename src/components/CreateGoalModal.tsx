@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useCreateGoal } from '../hooks/useGoals';
 import { usePillars } from '../hooks/usePillars';
+import { useUIStore } from '../lib/store';
 import type { Pillar } from '../lib/types';
 
 interface CreateGoalModalProps {
@@ -17,6 +18,7 @@ const GOAL_TYPES = [
 export function CreateGoalModal({ onClose, preselectedPillarId }: CreateGoalModalProps) {
   const { data: pillars } = usePillars();
   const createGoal = useCreateGoal();
+  const { openTemplateBrowser } = useUIStore();
 
   const [name, setName] = useState('');
   const [pillarId, setPillarId] = useState(preselectedPillarId ?? '');
@@ -33,17 +35,21 @@ export function CreateGoalModal({ onClose, preselectedPillarId }: CreateGoalModa
     e.preventDefault();
     if (!canSubmit) return;
 
-    await createGoal.mutateAsync({
-      name: name.trim(),
-      pillar_id: pillarId,
-      description: description.trim() || null,
-      goal_type: goalType,
-      mode,
-      target: mode === 'counted' && target ? Number(target) : null,
-      unit: mode === 'counted' && unit ? unit.trim() : null,
-      deadline: deadline || null,
-    });
-    onClose();
+    try {
+      await createGoal.mutateAsync({
+        name: name.trim(),
+        pillar_id: pillarId,
+        description: description.trim() || null,
+        goal_type: goalType,
+        mode,
+        target: mode === 'counted' && target ? Number(target) : null,
+        unit: mode === 'counted' && unit ? unit.trim() : null,
+        deadline: deadline || null,
+      });
+      onClose();
+    } catch {
+      // Error toast handled by hook onError
+    }
   }
 
   const selectedPillar = pillars?.find((p: Pillar) => p.id === pillarId);
@@ -270,9 +276,18 @@ export function CreateGoalModal({ onClose, preselectedPillarId }: CreateGoalModa
 
         {/* Footer */}
         <div
-          className="flex items-center justify-end gap-3 px-6 py-4"
+          className="flex items-center justify-between px-6 py-4"
           style={{ borderTop: '1px solid var(--border)' }}
         >
+          <button
+            type="button"
+            onClick={() => { onClose(); openTemplateBrowser(); }}
+            className="text-xs font-semibold cursor-pointer"
+            style={{ color: 'var(--accent)' }}
+          >
+            📋 Browse templates
+          </button>
+          <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onClose}
@@ -297,6 +312,7 @@ export function CreateGoalModal({ onClose, preselectedPillarId }: CreateGoalModa
           >
             {createGoal.isPending ? 'Creating...' : 'Create Goal'}
           </button>
+          </div>
         </div>
       </form>
     </div>

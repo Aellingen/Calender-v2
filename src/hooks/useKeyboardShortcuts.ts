@@ -8,16 +8,22 @@ export function useKeyboardShortcuts() {
     openCreateAction,
     openCreateHabit,
     openJournalPrompt,
+    toggleAIChat,
+    openTemplateBrowser,
     closeLifeMap,
     closeJournalPrompt,
     closeCreateGoal,
     closeCreateAction,
     closeCreateHabit,
+    closeAIChat,
+    closeTemplateBrowser,
     isLifeMapOpen,
     isJournalPromptOpen,
     isCreateGoalOpen,
     isCreateActionOpen,
     isCreateHabitOpen,
+    isAIChatOpen,
+    isTemplateBrowserOpen,
   } = useUIStore();
 
   useEffect(() => {
@@ -26,6 +32,8 @@ export function useKeyboardShortcuts() {
 
       // Escape: close topmost overlay
       if (e.key === 'Escape') {
+        if (isTemplateBrowserOpen) { closeTemplateBrowser(); return; }
+        if (isAIChatOpen) { closeAIChat(); return; }
         if (isJournalPromptOpen) { closeJournalPrompt(); return; }
         if (isCreateGoalOpen) { closeCreateGoal(); return; }
         if (isCreateActionOpen) { closeCreateAction(); return; }
@@ -66,6 +74,20 @@ export function useKeyboardShortcuts() {
         return;
       }
 
+      // Cmd+T: open template browser
+      if (meta && e.key === 't') {
+        e.preventDefault();
+        openTemplateBrowser();
+        return;
+      }
+
+      // Cmd+J: toggle AI chat
+      if (meta && e.key === 'j') {
+        e.preventDefault();
+        toggleAIChat();
+        return;
+      }
+
       // Cmd+R: open journal prompt
       if (meta && e.key === 'r') {
         e.preventDefault();
@@ -77,8 +99,8 @@ export function useKeyboardShortcuts() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [
-    toggleLifeMap, openCreateGoal, openCreateAction, openCreateHabit, openJournalPrompt,
-    closeLifeMap, closeJournalPrompt, closeCreateGoal, closeCreateAction, closeCreateHabit,
-    isLifeMapOpen, isJournalPromptOpen, isCreateGoalOpen, isCreateActionOpen, isCreateHabitOpen,
+    toggleLifeMap, toggleAIChat, openTemplateBrowser, openCreateGoal, openCreateAction, openCreateHabit, openJournalPrompt,
+    closeLifeMap, closeAIChat, closeTemplateBrowser, closeJournalPrompt, closeCreateGoal, closeCreateAction, closeCreateHabit,
+    isLifeMapOpen, isAIChatOpen, isTemplateBrowserOpen, isJournalPromptOpen, isCreateGoalOpen, isCreateActionOpen, isCreateHabitOpen,
   ]);
 }

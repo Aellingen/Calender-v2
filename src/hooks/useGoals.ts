@@ -9,6 +9,7 @@ import {
 } from '../lib/api';
 import type { CreateGoalInput, UpdateGoalInput } from '../lib/api';
 import type { Goal } from '../lib/types';
+import { toast } from '../components/Toast';
 
 const GOALS_KEY = ['goals'] as const;
 
@@ -43,6 +44,9 @@ export function useCreateGoal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to create goal', 'error');
+    },
   });
 }
 
@@ -54,6 +58,9 @@ export function useUpdateGoal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to update goal', 'error');
+    },
   });
 }
 
@@ -64,6 +71,9 @@ export function useDeleteGoal() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to delete goal', 'error');
+    },
   });
 }
 
@@ -73,6 +83,9 @@ export function useReorderGoals() {
     mutationFn: (ids: string[]) => reorderGoals(ids),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: GOALS_KEY });
+    },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to reorder goals', 'error');
     },
   });
 }

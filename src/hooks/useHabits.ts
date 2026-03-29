@@ -11,6 +11,7 @@ import {
 } from '../lib/api';
 import type { CreateHabitInput, UpdateHabitInput } from '../lib/api';
 import type { Habit, HabitCompletion } from '../lib/types';
+import { toast } from '../components/Toast';
 
 const HABITS_KEY = ['habits'] as const;
 const COMPLETIONS_TODAY_KEY = ['habit-completions', 'today'] as const;
@@ -86,6 +87,9 @@ export function useCreateHabit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HABITS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to create habit', 'error');
+    },
   });
 }
 
@@ -96,6 +100,9 @@ export function useUpdateHabit() {
       updateHabit(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HABITS_KEY });
+    },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to update habit', 'error');
     },
   });
 }
@@ -138,6 +145,7 @@ export function useToggleHabitCompletion() {
       if (context?.previous) {
         queryClient.setQueryData([...COMPLETIONS_TODAY_KEY, today], context.previous);
       }
+      toast('Failed to toggle habit', 'error');
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: COMPLETIONS_TODAY_KEY });
@@ -153,6 +161,9 @@ export function useRetireHabit() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HABITS_KEY });
     },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to retire habit', 'error');
+    },
   });
 }
 
@@ -162,6 +173,9 @@ export function useDeleteHabit() {
     mutationFn: (id: string) => deleteHabit(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: HABITS_KEY });
+    },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to delete habit', 'error');
     },
   });
 }

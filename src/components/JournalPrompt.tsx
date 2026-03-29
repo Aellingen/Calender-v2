@@ -44,13 +44,17 @@ export function JournalPrompt() {
 
   async function handleSubmit() {
     const today = format(new Date(), 'yyyy-MM-dd');
-    await upsertJournal.mutateAsync({
-      entry_date: today,
-      content: content.trim() || null,
-      mood,
-      pillar_ids: selectedPillars,
-    });
-    closeJournalPrompt();
+    try {
+      await upsertJournal.mutateAsync({
+        entry_date: today,
+        content: content.trim() || null,
+        mood,
+        pillar_ids: selectedPillars,
+      });
+      closeJournalPrompt();
+    } catch {
+      // Error toast handled by hook onError
+    }
   }
 
   return (

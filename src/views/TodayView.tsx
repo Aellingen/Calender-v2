@@ -8,6 +8,8 @@ import { useUIStore } from '../lib/store';
 import { ActionCard } from '../components/ActionCard';
 import { CreateActionModal } from '../components/CreateActionModal';
 import { HabitStrip } from '../components/HabitStrip';
+import { NudgeCard } from '../components/NudgeCard';
+import { QuickAddBar } from '../components/QuickAddBar';
 import { ActionCardSkeleton, HabitCircleSkeleton } from '../components/Skeleton';
 import type { Goal, Pillar, Action } from '../lib/types';
 
@@ -91,6 +93,9 @@ export default function TodayView() {
       {/* Habit strip */}
       <HabitStrip />
 
+      {/* AI Coaching nudge — between habit strip and action list */}
+      <NudgeCard />
+
       {/* Action list */}
       {sortedActions.length > 0 ? (
         <div className="space-y-2">
@@ -145,28 +150,8 @@ export default function TodayView() {
         </div>
       )}
 
-      {/* QuickAddBar */}
-      <div className="mt-6">
-        <button
-          type="button"
-          onClick={() => setShowCreateModal(true)}
-          className="w-full flex items-center gap-2 px-4 py-3 rounded-[var(--r-lg)] cursor-pointer transition-all"
-          style={{
-            background: 'var(--card)',
-            border: '1px solid var(--border)',
-            color: 'var(--text-muted)',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = 'var(--accent-light)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = 'var(--border)';
-          }}
-        >
-          <span className="text-base leading-none" style={{ color: 'var(--accent)' }}>+</span>
-          <span className="text-sm">Add an action for today...</span>
-        </button>
-      </div>
+      {/* QuickAddBar with NLP parsing */}
+      <QuickAddBar onOpenFullModal={() => setShowCreateModal(true)} />
 
       {/* Create modal */}
       {showCreateModal && (

@@ -17,6 +17,16 @@ Phase 1 (current): Web app with Pillars, Habits, Today View, Goals View, Life Ma
 - **DnD**: @dnd-kit (core + sortable)
 - **Linting**: Biome
 
+## Quality Standards
+- Run `npx tsc --noEmit` after every file change. Zero type errors at all times.
+- No `any` types. No `// @ts-ignore`. No `as unknown as`.
+- Every component handles: loading state, error state, empty state.
+- Every mutation has optimistic updates where appropriate and error rollback.
+- Every API call has try/catch with user-facing error toast.
+- Test each feature manually in the browser after building it.
+- If something doesn't work, fix it before moving to the next task.
+
+
 ## Code Conventions
 
 ### TypeScript

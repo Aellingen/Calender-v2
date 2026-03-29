@@ -34,7 +34,7 @@ function NavTab({ to, children }: { to: string; children: React.ReactNode }) {
 
 export function AppShell() {
   const { signOut, user } = useAuth();
-  const { toggleLifeMap } = useUIStore();
+  const { toggleLifeMap, toggleAIChat } = useUIStore();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
@@ -68,6 +68,18 @@ export function AppShell() {
 
         {/* Right: Actions + User menu */}
         <div className="flex items-center gap-3 relative">
+          <button
+            onClick={toggleAIChat}
+            className="text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer"
+            style={{
+              background: 'var(--accent-softer)',
+              color: 'var(--accent-text)',
+            }}
+            title="AI Assistant (Cmd+J)"
+          >
+            ✨ AI
+          </button>
+
           <button
             onClick={toggleLifeMap}
             className="text-xs font-medium px-3 py-1.5 rounded-full transition-colors cursor-pointer"

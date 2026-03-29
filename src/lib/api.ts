@@ -1,5 +1,113 @@
+import { z } from 'zod';
 import { supabase } from './supabase';
-import type { Pillar, Goal, Action, Habit, HabitCompletion, JournalEntry, UserSettings, Review, ReviewSnapshot } from './types';
+import type { Pillar, Goal, Action, Habit, HabitCompletion, JournalEntry, UserSettings, Review, ReviewSnapshot, AIThread, AIMessage, AIChatResponse, AIApproveResponse } from './types';
+
+// --- Zod schemas for input validation ---
+
+const createPillarSchema = z.object({
+  name: z.string().min(1).max(100),
+  color: z.string().min(1),
+  icon: z.string().min(1),
+  description: z.string().max(500).nullable().optional(),
+  sort_order: z.number().int().min(0),
+});
+
+const updatePillarSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  color: z.string().min(1).optional(),
+  icon: z.string().min(1).optional(),
+  description: z.string().max(500).nullable().optional(),
+  sort_order: z.number().int().min(0).optional(),
+  is_archived: z.boolean().optional(),
+});
+
+const createGoalSchema = z.object({
+  name: z.string().min(1).max(200),
+  pillar_id: z.string().uuid(),
+  description: z.string().max(1000).nullable().optional(),
+  color: z.string().nullable().optional(),
+  mode: z.enum(['checked', 'counted']).optional(),
+  target: z.number().positive().nullable().optional(),
+  unit: z.string().max(50).nullable().optional(),
+  goal_type: z.enum(['outcome', 'process', 'milestone']).optional(),
+  deadline: z.string().nullable().optional(),
+});
+
+const updateGoalSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  pillar_id: z.string().uuid().optional(),
+  description: z.string().max(1000).nullable().optional(),
+  color: z.string().nullable().optional(),
+  mode: z.enum(['checked', 'counted']).optional(),
+  target: z.number().positive().nullable().optional(),
+  current_value: z.number().min(0).optional(),
+  unit: z.string().max(50).nullable().optional(),
+  goal_type: z.enum(['outcome', 'process', 'milestone']).optional(),
+  status: z.enum(['active', 'paused', 'archived', 'complete']).optional(),
+  deadline: z.string().nullable().optional(),
+  sort_order: z.number().int().min(0).optional(),
+});
+
+const createActionSchema = z.object({
+  name: z.string().min(1).max(200),
+  goal_id: z.string().uuid(),
+  scheduled_date: z.string().nullable().optional(),
+  scheduled_time: z.string().nullable().optional(),
+  estimated_minutes: z.number().int().positive().nullable().optional(),
+  priority: z.number().int().min(0).max(3).optional(),
+  target: z.number().positive().nullable().optional(),
+  unit: z.string().max(50).nullable().optional(),
+  period_type: z.enum(['weekly', 'monthly', 'none']).optional(),
+});
+
+const updateActionSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  goal_id: z.string().uuid().optional(),
+  status: z.enum(['active', 'complete', 'archived']).optional(),
+  scheduled_date: z.string().nullable().optional(),
+  scheduled_time: z.string().nullable().optional(),
+  estimated_minutes: z.number().int().positive().nullable().optional(),
+  priority: z.number().int().min(0).max(3).optional(),
+  target: z.number().positive().nullable().optional(),
+  current_value: z.number().min(0).optional(),
+  unit: z.string().max(50).nullable().optional(),
+  sort_order: z.number().int().min(0).optional(),
+});
+
+const createHabitSchema = z.object({
+  name: z.string().min(1).max(200),
+  pillar_id: z.string().uuid(),
+  goal_id: z.string().uuid().nullable().optional(),
+  icon: z.string().max(10).nullable().optional(),
+  frequency: z.enum(['daily', 'weekdays', 'weekends', 'custom']),
+  custom_days: z.array(z.number().int().min(1).max(7)).nullable().optional(),
+});
+
+const updateHabitSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  pillar_id: z.string().uuid().optional(),
+  goal_id: z.string().uuid().nullable().optional(),
+  icon: z.string().max(10).nullable().optional(),
+  frequency: z.enum(['daily', 'weekdays', 'weekends', 'custom']).optional(),
+  custom_days: z.array(z.number().int().min(1).max(7)).nullable().optional(),
+  sort_order: z.number().int().min(0).optional(),
+  is_active: z.boolean().optional(),
+});
+
+const upsertJournalSchema = z.object({
+  entry_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  content: z.string().max(5000).nullable().optional(),
+  mood: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5)]).nullable().optional(),
+  pillar_ids: z.array(z.string().uuid()).optional(),
+});
+
+const submitReviewSchema = z.object({
+  review_type: z.enum(['weekly', 'monthly']),
+  period_start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  period_end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  note: z.string().max(2000).nullable().optional(),
+  pillar_breakdown: z.record(z.string(), z.unknown()).nullable().optional(),
+});
 
 // Generic typed fetch helpers wrapping the Supabase client.
 // All data access goes through these functions — never use supabase directly in components.
@@ -109,6 +217,7 @@ export interface UpdatePillarInput {
 }
 
 export async function createPillar(input: CreatePillarInput): Promise<Pillar> {
+  createPillarSchema.parse(input);
   const { data, error } = await supabase
     .from('pillars')
     .insert(input)
@@ -119,6 +228,7 @@ export async function createPillar(input: CreatePillarInput): Promise<Pillar> {
 }
 
 export async function createPillars(inputs: CreatePillarInput[]): Promise<Pillar[]> {
+  inputs.forEach((input) => createPillarSchema.parse(input));
   const { data, error } = await supabase
     .from('pillars')
     .insert(inputs)
@@ -128,6 +238,7 @@ export async function createPillars(inputs: CreatePillarInput[]): Promise<Pillar
 }
 
 export async function updatePillar(id: string, input: UpdatePillarInput): Promise<Pillar> {
+  updatePillarSchema.parse(input);
   const { data, error } = await supabase
     .from('pillars')
     .update(input)
@@ -197,6 +308,7 @@ export async function fetchGoal(id: string): Promise<Goal> {
 }
 
 export async function createGoal(input: CreateGoalInput): Promise<Goal> {
+  createGoalSchema.parse(input);
   const { data, error } = await supabase
     .from('goals')
     .insert(input)
@@ -207,6 +319,7 @@ export async function createGoal(input: CreateGoalInput): Promise<Goal> {
 }
 
 export async function updateGoal(id: string, input: UpdateGoalInput): Promise<Goal> {
+  updateGoalSchema.parse(input);
   const { data, error } = await supabase
     .from('goals')
     .update(input)
@@ -219,10 +332,11 @@ export async function updateGoal(id: string, input: UpdateGoalInput): Promise<Go
 
 export async function deleteGoal(id: string): Promise<void> {
   // Unlink habits (they keep pillar, lose goal_id)
-  await supabase
+  const { error: unlinkError } = await supabase
     .from('habits')
     .update({ goal_id: null })
     .eq('goal_id', id);
+  if (unlinkError) throw unlinkError;
 
   const { error } = await supabase
     .from('goals')
@@ -291,6 +405,7 @@ export async function fetchAction(id: string): Promise<Action> {
 }
 
 export async function createAction(input: CreateActionInput): Promise<Action> {
+  createActionSchema.parse(input);
   const { data, error } = await supabase
     .from('actions')
     .insert(input)
@@ -301,6 +416,7 @@ export async function createAction(input: CreateActionInput): Promise<Action> {
 }
 
 export async function updateAction(id: string, input: UpdateActionInput): Promise<Action> {
+  updateActionSchema.parse(input);
   const { data, error } = await supabase
     .from('actions')
     .update(input)
@@ -362,6 +478,7 @@ export async function fetchTodayCompletions(date: string): Promise<HabitCompleti
 }
 
 export async function createHabit(input: CreateHabitInput): Promise<Habit> {
+  createHabitSchema.parse(input);
   const { data, error } = await supabase
     .from('habits')
     .insert(input)
@@ -372,6 +489,7 @@ export async function createHabit(input: CreateHabitInput): Promise<Habit> {
 }
 
 export async function updateHabit(id: string, input: UpdateHabitInput): Promise<Habit> {
+  updateHabitSchema.parse(input);
   const { data, error } = await supabase
     .from('habits')
     .update(input)
@@ -473,10 +591,11 @@ async function recalculateStreak(habitId: string): Promise<number> {
 
   // Update habit streaks
   const longestStreak = Math.max(streak, (habit as Habit).longest_streak);
-  await supabase
+  const { error: streakError } = await supabase
     .from('habits')
     .update({ current_streak: streak, longest_streak: longestStreak })
     .eq('id', habitId);
+  if (streakError) throw streakError;
 
   return streak;
 }
@@ -535,6 +654,7 @@ export async function fetchJournalHistory(limit: number): Promise<JournalEntry[]
 }
 
 export async function upsertJournal(input: UpsertJournalInput): Promise<JournalEntry> {
+  upsertJournalSchema.parse(input);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Not authenticated');
 
@@ -593,6 +713,7 @@ export async function fetchReviewsByType(type?: string): Promise<Review[]> {
 }
 
 export async function submitReview(input: SubmitReviewInput): Promise<Review> {
+  submitReviewSchema.parse(input);
   const { data, error } = await supabase
     .from('reviews')
     .insert(input)
@@ -637,4 +758,125 @@ export async function updateUserSettings(input: Partial<Omit<UserSettings, 'user
     .single();
   if (error) throw error;
   return data;
+}
+
+// --- AI functions ---
+
+export async function sendAIChatMessage(
+  threadId: string | null,
+  message: string,
+  contextType?: string,
+  contextId?: string,
+): Promise<AIChatResponse> {
+  const { data, error } = await supabase.functions.invoke('ai-chat', {
+    body: {
+      thread_id: threadId,
+      message,
+      context_type: contextType,
+      context_id: contextId,
+    },
+  });
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data as AIChatResponse;
+}
+
+export async function approveAIProposals(
+  proposals: Array<{ id: string; type: string; data: Record<string, unknown> }>,
+): Promise<AIApproveResponse> {
+  const { data, error } = await supabase.functions.invoke('ai-approve', {
+    body: { proposals },
+  });
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data as AIApproveResponse;
+}
+
+export async function fetchAIThreads(): Promise<AIThread[]> {
+  const { data, error } = await supabase
+    .from('ai_threads')
+    .select('*')
+    .order('updated_at', { ascending: false })
+    .limit(20);
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchAIMessages(threadId: string): Promise<AIMessage[]> {
+  const { data, error } = await supabase
+    .from('ai_messages')
+    .select('*')
+    .eq('thread_id', threadId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return data;
+}
+
+export interface QuickParseResult {
+  type: 'action' | 'habit';
+  name: string;
+  goal_name?: string;
+  goal_id?: string;
+  pillar_name?: string;
+  pillar_id?: string;
+  scheduled_date?: string;
+  scheduled_time?: string;
+  estimated_minutes?: number;
+  priority?: number;
+  frequency?: string;
+  icon?: string;
+}
+
+export async function quickParseText(text: string): Promise<QuickParseResult> {
+  const { data, error } = await supabase.functions.invoke('ai-quick-parse', {
+    body: { text },
+  });
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data.parsed as QuickParseResult;
+}
+
+export interface NudgeResult {
+  nudge: string;
+  type: 'motivation' | 'reminder' | 'celebration';
+}
+
+export async function fetchAINudge(): Promise<NudgeResult> {
+  const { data, error } = await supabase.functions.invoke('ai-nudge', {});
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data as NudgeResult;
+}
+
+export interface ReviewSummaryResult {
+  summary: string;
+  highlights: string[];
+  suggestions: string[];
+}
+
+export async function generateReviewSummary(input: {
+  review_id: string;
+  period_start: string;
+  period_end: string;
+  pillar_breakdown: Record<string, unknown>;
+  note?: string;
+}): Promise<ReviewSummaryResult> {
+  const { data, error } = await supabase.functions.invoke('ai-review-summary', {
+    body: input,
+  });
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data as ReviewSummaryResult;
+}
+
+export async function fetchAIUsageToday(): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const { count, error } = await supabase
+    .from('ai_messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('role', 'user')
+    .gte('created_at', todayStart.toISOString());
+  if (error) throw error;
+  return count ?? 0;
 }

@@ -38,15 +38,19 @@ export function CreateActionModal({ onClose, prefilledDate, prefilledGoalId }: C
     e.preventDefault();
     if (!canSubmit) return;
 
-    await createAction.mutateAsync({
-      name: name.trim(),
-      goal_id: goalId,
-      scheduled_date: scheduledDate || null,
-      scheduled_time: scheduledTime || null,
-      estimated_minutes: estimatedMinutes ? Number(estimatedMinutes) : null,
-      priority,
-    });
-    onClose();
+    try {
+      await createAction.mutateAsync({
+        name: name.trim(),
+        goal_id: goalId,
+        scheduled_date: scheduledDate || null,
+        scheduled_time: scheduledTime || null,
+        estimated_minutes: estimatedMinutes ? Number(estimatedMinutes) : null,
+        priority,
+      });
+      onClose();
+    } catch {
+      // Error toast handled by hook onError
+    }
   }
 
   const selectedGoal = goals?.find((g: Goal) => g.id === goalId);

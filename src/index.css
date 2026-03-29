@@ -172,8 +172,9 @@ body {
 
 /* Responsive: mobile (<768px) */
 @media (max-width: 767px) {
-  /* Life Map goes full-screen on mobile */
-  .life-map-panel {
+  /* Life Map and AI Chat go full-screen on mobile */
+  .life-map-panel,
+  .ai-chat-panel {
     width: 100% !important;
   }
 }

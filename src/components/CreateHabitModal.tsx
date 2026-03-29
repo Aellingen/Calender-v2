@@ -59,15 +59,19 @@ export function CreateHabitModal({ onClose, preselectedPillarId, preselectedGoal
     e.preventDefault();
     if (!canSubmit) return;
 
-    await createHabit.mutateAsync({
-      name: name.trim(),
-      pillar_id: pillarId,
-      goal_id: goalId || null,
-      icon: icon.trim() || null,
-      frequency,
-      custom_days: frequency === 'custom' ? customDays : null,
-    });
-    onClose();
+    try {
+      await createHabit.mutateAsync({
+        name: name.trim(),
+        pillar_id: pillarId,
+        goal_id: goalId || null,
+        icon: icon.trim() || null,
+        frequency,
+        custom_days: frequency === 'custom' ? customDays : null,
+      });
+      onClose();
+    } catch {
+      // Error toast handled by hook onError
+    }
   }
 
   return (

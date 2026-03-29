@@ -110,3 +110,76 @@ export interface ReviewSnapshot {
   action_id: string;
   sealed_value: number;
 }
+
+// --- AI Types ---
+
+export interface AIThread {
+  id: string;
+  user_id: string;
+  title: string | null;
+  context_type: 'general' | 'goal' | 'review' | 'template' | null;
+  context_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AIMessage {
+  id: string;
+  thread_id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  proposals: AIProposal[] | null;
+  created_at: string;
+}
+
+export interface AIProposal {
+  id: string;
+  type: 'goal' | 'action' | 'habit';
+  status: 'pending' | 'approved' | 'rejected';
+  data: AIProposalGoal | AIProposalAction | AIProposalHabit;
+}
+
+export interface AIProposalGoal {
+  name: string;
+  pillar_name?: string;
+  description?: string;
+  goal_type?: 'outcome' | 'process' | 'milestone';
+  mode?: 'checked' | 'counted';
+  target?: number;
+  unit?: string;
+  deadline?: string;
+}
+
+export interface AIProposalAction {
+  name: string;
+  goal_name?: string;
+  goal_id?: string;
+  scheduled_date?: string;
+  scheduled_time?: string;
+  estimated_minutes?: number;
+  priority?: number;
+}
+
+export interface AIProposalHabit {
+  name: string;
+  pillar_name?: string;
+  pillar_id?: string;
+  goal_name?: string;
+  goal_id?: string;
+  icon?: string;
+  frequency?: 'daily' | 'weekdays' | 'weekends' | 'custom';
+  custom_days?: number[];
+}
+
+export interface AIChatResponse {
+  thread_id: string;
+  message: string;
+  proposals: AIProposal[];
+  user_message_id: string;
+  assistant_message_id: string;
+}
+
+export interface AIApproveResponse {
+  created: Array<{ proposal_id: string; type: string; entity_id: string }>;
+  errors: Array<{ proposal_id: string; error: string }>;
+}

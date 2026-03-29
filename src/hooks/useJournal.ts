@@ -6,6 +6,7 @@ import {
   upsertJournal,
 } from '../lib/api';
 import type { UpsertJournalInput } from '../lib/api';
+import { toast } from '../components/Toast';
 
 const JOURNAL_KEY = ['journal'] as const;
 
@@ -30,6 +31,9 @@ export function useUpsertJournal() {
     mutationFn: (data: UpsertJournalInput) => upsertJournal(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: JOURNAL_KEY });
+    },
+    onError: (error: Error) => {
+      toast(error.message || 'Failed to save journal entry', 'error');
     },
   });
 }

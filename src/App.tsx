@@ -8,6 +8,8 @@ import { CreateGoalModal } from './components/CreateGoalModal';
 import { CreateActionModal } from './components/CreateActionModal';
 import { CreateHabitModal } from './components/CreateHabitModal';
 import { ToastContainer } from './components/Toast';
+import { AIChatPanel } from './components/AIChatPanel';
+import { TemplateBrowser } from './components/TemplateBrowser';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useUIStore } from './lib/store';
 import LoginView from './views/LoginView';
@@ -30,6 +32,7 @@ function GlobalModals() {
     isCreateGoalOpen, closeCreateGoal,
     isCreateActionOpen, closeCreateAction,
     isCreateHabitOpen, closeCreateHabit,
+    isTemplateBrowserOpen, closeTemplateBrowser,
   } = useUIStore();
 
   return (
@@ -38,6 +41,7 @@ function GlobalModals() {
       {isCreateGoalOpen && <CreateGoalModal onClose={closeCreateGoal} />}
       {isCreateActionOpen && <CreateActionModal onClose={closeCreateAction} />}
       {isCreateHabitOpen && <CreateHabitModal onClose={closeCreateHabit} />}
+      {isTemplateBrowserOpen && <TemplateBrowser onClose={closeTemplateBrowser} />}
     </>
   );
 }
@@ -67,6 +71,7 @@ function App() {
             <Route path="*" element={<Navigate to="/today" replace />} />
           </Routes>
           <GlobalModals />
+          <AIChatPanel />
           <ToastContainer />
         </ShortcutsProvider>
       </BrowserRouter>
